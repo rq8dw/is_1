@@ -1,0 +1,17 @@
+pluginManagement {
+    repositories {
+        // Зеркало Maven Central: repo.maven.apache.org из РФ отвечает 403
+        maven { url 'https://maven-central.storage-download.googleapis.com/maven2/' }
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    repositories {
+        maven { url 'https://maven-central.storage-download.googleapis.com/maven2/' }
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'is-lab1'

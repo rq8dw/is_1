@@ -1,0 +1,40 @@
+@startuml 01-packages
+!include style.iuml
+
+package "ru.itmo.is.lab1" {
+    package web {
+    }
+    package dto {
+    }
+    package service {
+    }
+    package service.exception {
+    }
+    package repository {
+    }
+    package domain {
+    }
+    package realtime {
+    }
+}
+
+package "static (клиент)" {
+}
+package "db.migration (SQL)" {
+}
+
+"static (клиент)" ..> web : <<HTTP, JSON>>
+"static (клиент)" ..> realtime : <<WebSocket>>
+web ..> service
+web ..> service.exception
+web ..> dto
+web ..> domain
+service ..> service.exception
+service ..> repository
+service ..> realtime
+service ..> dto
+service ..> domain
+dto ..> domain
+repository ..> domain
+repository ..> "db.migration (SQL)" : <<call>>
+@enduml

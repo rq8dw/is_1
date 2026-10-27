@@ -1,0 +1,82 @@
+@startuml 08-client
+!include style.iuml
+
+package "static/js" {
+
+    class "pages/*.js" as pages <<module>> {
+        list.js : таблица организаций
+        create.js : создание организации
+        view.js : просмотр по ID
+        special.js : специальные операции
+        related.js : координаты и адреса
+    }
+
+    class "dialogs.js" as dialogs <<module>> {
+        + confirmDialog(options) : Promise<boolean>
+        + openEditDialog(organizationId) : Promise<OrganizationDto>
+        + deleteOrganizationWithConfirm(organization) : Promise<boolean>
+    }
+
+    class "organization-form.js" as form <<module>> {
+        + parseInteger(raw) : {value | empty | error}
+        + parseDecimal(raw) : {value | empty | error}
+        + numberInput(kind, onRejected) : HTMLInputElement
+    }
+
+    class OrganizationForm {
+        + element : HTMLFormElement
+        + init(organization) : Promise
+        + setValues(organization) : void
+        + reset() : void
+        + collect() : {request, errors}
+        + showErrors(fieldErrors, generalMessage) : void
+        + setSubmitEnabled(enabled) : void
+        + submit() : Promise
+        + loadOptions() : Promise
+        + destroy() : void
+    }
+
+    class "layout.js" as layout <<module>> {
+        + renderLayout(active) : void
+        + toast(message, type, timeout) : void
+    }
+
+    class "api.js" as api <<module>> {
+        + api : {listOrganizations, getOrganization, createOrganization, ...}
+    }
+
+    class ApiError {
+        + status : number
+        + fieldErrors : Object
+    }
+
+    class "realtime.js" as realtime <<module>> {
+        + onChange(listener) : Function
+        + debounce(fn, ms) : Function
+    }
+
+    class "dom.js" as dom <<module>> {
+        + h(tag, props, ...children) : HTMLElement
+        + clear(element, ...children) : HTMLElement
+        + TYPES : String[]
+        + formatDate(), formatZip(), typeChip(), ...
+    }
+}
+
+pages ..> dialogs
+pages ..> form
+pages ..> layout
+pages ..> api
+pages ..> realtime
+pages ..> dom
+dialogs ..> form
+dialogs ..> layout
+dialogs ..> api
+dialogs ..> realtime
+form +-- OrganizationForm
+form ..> api
+form ..> realtime
+form ..> dom
+api +-- ApiError
+layout ..> dom
+@enduml

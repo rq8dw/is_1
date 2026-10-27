@@ -1,0 +1,50 @@
+server:
+  port: ${PORT:8080}
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+
+spring:
+  application:
+    name: is-lab1
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/is_lab1}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:123}
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Схему создаёт Flyway, Hibernate только сверяет маппинг с таблицами
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_batch_fetch_size: 50
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    # На кафедральном pg в схеме студента могут лежать таблицы других лаб
+    baseline-on-migrate: true
+    baseline-version: 0
+  jackson:
+    deserialization:
+      accept-float-as-int: false
+      fail-on-null-for-primitives: true
+    default-property-inclusion: always
+
+logging:
+  level:
+    org.hibernate.SQL: ${SQL_LOG_LEVEL:warn}
+
+---
+# Запуск на гелиосе: java -jar is-lab1.jar --spring.profiles.active=helios
+spring:
+  config:
+    activate:
+      on-profile: helios
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://pg:5432/studs}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}

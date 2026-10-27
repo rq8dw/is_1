@@ -1,0 +1,93 @@
+@startuml 06-dto
+!include style.iuml
+
+package ru.itmo.is.lab1.dto {
+
+    class OrganizationRequest <<record>> {
+        + name : String {not blank}
+        + coordinates : CoordinatesInput {not null}
+        + officialAddress : AddressInput [0..1]
+        + annualTurnover : Long [0..1] {> 0}
+        + employeesCount : Long {not null, > 0}
+        + rating : Float [0..1] {> 0}
+        + fullName : String {not null}
+        + type : OrganizationType {not null}
+        + postalAddress : AddressInput [0..1]
+    }
+
+    class CoordinatesInput <<record>> {
+        + id : Long [0..1]
+        + x : Double [0..1] {<= 549}
+        + y : Double [0..1]
+    }
+
+    class AddressInput <<record>> {
+        + id : Long [0..1]
+        + zipCode : String [0..1]
+    }
+
+    class OrganizationDto <<record>> {
+        + id : long
+        + name : String
+        + coordinates : CoordinatesDto
+        + creationDate : ZonedDateTime
+        + officialAddress : AddressDto [0..1]
+        + annualTurnover : Long [0..1]
+        + employeesCount : long
+        + rating : Float [0..1]
+        + fullName : String
+        + type : OrganizationType
+        + postalAddress : AddressDto [0..1]
+    }
+
+    class CoordinatesDto <<record>> {
+        + id : Long
+        + x : double
+        + y : double
+        + usages : Long [0..1]
+    }
+
+    class AddressDto <<record>> {
+        + id : Long
+        + zipCode : String
+        + usages : Long [0..1]
+    }
+
+    class "PageDto<T>" as PageDto <<record>> {
+        + content : List<T>
+        + page : int
+        + size : int
+        + totalElements : long
+        + totalPages : int
+    }
+
+    class AbsorbRequest <<record>> {
+        + absorberId : Long {not null, > 0}
+        + absorbedId : Long {not null, > 0}
+    }
+
+    class AbsorbResult <<record>> {
+        + absorber : OrganizationDto
+        + absorbedId : long
+        + transferredEmployees : long
+    }
+
+    class CountResult <<record>> {
+        + count : long
+    }
+
+    class ApiError <<record>> {
+        + status : int
+        + message : String
+        + fieldErrors : Map<String, String>
+        + timestamp : Instant
+    }
+}
+
+OrganizationRequest *-- "1" CoordinatesInput
+OrganizationRequest *-- "0..2" AddressInput
+OrganizationDto *-- "1" CoordinatesDto
+OrganizationDto *-- "0..2" AddressDto
+AbsorbResult *-- "1" OrganizationDto
+PageDto o-- "*" OrganizationDto : content (T = OrganizationDto)
+@enduml

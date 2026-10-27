@@ -1,0 +1,31 @@
+' Общий стиль диаграмм. Smetana — встроенный в PlantUML движок раскладки (Graphviz не нужен).
+!pragma layout smetana
+' Точки в имени пакета не создают вложенных пакетов
+set separator none
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam titleFontSize 14
+skinparam packageStyle folder
+skinparam nodesep 40
+skinparam ranksep 50
+skinparam ArrowColor #333333
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #333333
+    HeaderBackgroundColor #F3F4F6
+    StereotypeFontSize 10
+}
+skinparam package {
+    BackgroundColor #FCFCFC
+    BorderColor #666666
+    FontStyle bold
+}
+skinparam note {
+    BackgroundColor #FFFDE7
+    BorderColor #9E9E9E
+    FontSize 11
+}
+hide circle
+hide empty members

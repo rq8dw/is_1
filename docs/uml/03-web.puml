@@ -1,0 +1,66 @@
+@startuml 03-web
+!include style.iuml
+left to right direction
+
+package ru.itmo.is.lab1.web {
+
+    class OrganizationController <<RestController>> {
+        - organizationService : OrganizationService
+        + list(page, size, sort, direction, name, fullName, type, officialZipCode, postalZipCode) : PageDto<OrganizationDto>
+        + get(id : long) : OrganizationDto
+        + create(request : OrganizationRequest) : ResponseEntity<OrganizationDto>
+        + update(id : long, request : OrganizationRequest) : OrganizationDto
+        + delete(id : long) : ResponseEntity<Void>
+    }
+
+    class RelatedObjectController <<RestController>> {
+        - relatedObjectService : RelatedObjectService
+        + coordinates() : List<CoordinatesDto>
+        + deleteCoordinates(id : long) : ResponseEntity<Void>
+        + addresses() : List<AddressDto>
+        + deleteAddress(id : long) : ResponseEntity<Void>
+    }
+
+    class SpecialOperationsController <<RestController>> {
+        - specialOperationsService : SpecialOperationsService
+        + countByType(type : OrganizationType) : CountResult
+        + countFullNameGreater(fullName : String) : CountResult
+        + typeLessThan(type : OrganizationType) : List<OrganizationDto>
+        + addEmployee(id : long) : OrganizationDto
+        + absorb(request : AbsorbRequest) : AbsorbResult
+    }
+
+    class ApiExceptionHandler <<RestControllerAdvice>> {
+        - {static} DB_CONSTRAINTS : Map<String, Entry<String, String>>
+        + notFound(e : NotFoundException) : ResponseEntity<ApiError>
+        + invalidInput(e : InvalidInputException) : ResponseEntity<ApiError>
+        + bindingFailed(e : BindException) : ResponseEntity<ApiError>
+        + entityValidationFailed(e : Exception) : ResponseEntity<ApiError>
+        + unreadableBody(e : HttpMessageNotReadableException) : ResponseEntity<ApiError>
+        + typeMismatch(e : MethodArgumentTypeMismatchException) : ResponseEntity<ApiError>
+        + missingParameter(e : MissingServletRequestParameterException) : ResponseEntity<ApiError>
+        + integrityViolation(e : DataIntegrityViolationException) : ResponseEntity<ApiError>
+        + dataAccess(e : DataAccessException) : ResponseEntity<ApiError>
+        + methodNotSupported(e : HttpRequestMethodNotSupportedException) : ResponseEntity<ApiError>
+        + noResource(e : NoResourceFoundException) : ResponseEntity<ApiError>
+        + unexpected(e : Exception) : ResponseEntity<ApiError>
+    }
+}
+
+package ru.itmo.is.lab1.service {
+    class OrganizationService <<Service>>
+    class RelatedObjectService <<Service>>
+    class SpecialOperationsService <<Service>>
+}
+
+package ru.itmo.is.lab1.service.exception {
+    class NotFoundException
+    class InvalidInputException
+}
+
+OrganizationController --> "1" OrganizationService
+RelatedObjectController --> "1" RelatedObjectService
+SpecialOperationsController --> "1" SpecialOperationsService
+ApiExceptionHandler ..> NotFoundException : <<handle>>
+ApiExceptionHandler ..> InvalidInputException : <<handle>>
+@enduml

@@ -1,0 +1,121 @@
+@startuml 04-service
+!include style.iuml
+
+package ru.itmo.is.lab1.service {
+
+    class OrganizationService <<Service>> {
+        + {static} MAX_PAGE_SIZE : int = 100
+        - {static} SORT_PROPERTIES : Map<String, String>
+        - organizationRepository : OrganizationRepository
+        - coordinatesRepository : CoordinatesRepository
+        - addressRepository : AddressRepository
+        - cascadeDeleter : CascadeDeleter
+        - changePublisher : ChangePublisher
+        + findPage(filter : OrganizationFilter, page : int, size : int, sortField : String, sortDirection : String) : PageDto<OrganizationDto>
+        + get(id : long) : OrganizationDto
+        + create(request : OrganizationRequest) : OrganizationDto
+        + update(id : long, request : OrganizationRequest) : OrganizationDto
+        + delete(id : long) : void
+        - applyRequest(organization : Organization, request : OrganizationRequest, relations : Relations) : void
+        - resolveRelations(request : OrganizationRequest) : Relations
+        - resolveCoordinates(input : CoordinatesInput, errors : Map<String, String>) : Coordinates
+        - resolveAddress(input : AddressInput, field : String, errors : Map<String, String>) : Address
+        - saveIfNew(coordinates : Coordinates) : Coordinates
+        - saveIfNew(address : Address) : Address
+    }
+
+    class "OrganizationService.Relations" as Relations <<record>> {
+        + coordinates : Coordinates
+        + officialAddress : Address
+        + postalAddress : Address
+    }
+
+    class OrganizationFilter <<record>> {
+        + name : String
+        + fullName : String
+        + type : OrganizationType
+        + officialZipCode : String
+        + postalZipCode : String
+    }
+
+    class RelatedObjectService <<Service>> {
+        - coordinatesRepository : CoordinatesRepository
+        - addressRepository : AddressRepository
+        - organizationRepository : OrganizationRepository
+        - cascadeDeleter : CascadeDeleter
+        + listCoordinates() : List<CoordinatesDto>
+        + listAddresses() : List<AddressDto>
+        + deleteCoordinates(id : long) : void
+        + deleteAddress(id : long) : void
+        - {static} toUsageMap(rows : List<Object[]>) : Map<Long, Long>
+    }
+
+    class SpecialOperationsService <<Service>> {
+        - specialOperationsRepository : SpecialOperationsRepository
+        - organizationRepository : OrganizationRepository
+        - cascadeDeleter : CascadeDeleter
+        - changePublisher : ChangePublisher
+        + countByType(type : OrganizationType) : long
+        + countFullNameGreaterThan(fullName : String) : long
+        + findTypeLessThan(type : OrganizationType) : List<OrganizationDto>
+        + addEmployee(organizationId : long) : OrganizationDto
+        + absorb(absorberId : long, absorbedId : long) : AbsorbResult
+        - loadFresh(id : long) : OrganizationDto
+        - {static} requireType(type : OrganizationType) : void
+    }
+
+    class CascadeDeleter <<Component>> {
+        - organizationRepository : OrganizationRepository
+        - coordinatesRepository : CoordinatesRepository
+        - addressRepository : AddressRepository
+        - changePublisher : ChangePublisher
+        + deleteOrganizations(organizations : Collection<Organization>) : void
+        + deleteUnusedRelatedObjects(coordinatesIds : Collection<Long>, addressIds : Collection<Long>) : void
+    }
+
+    class DtoMapper <<utility>> {
+        ~ {static} toDto(organization : Organization) : OrganizationDto
+        ~ {static} toDto(coordinates : Coordinates, usages : Long) : CoordinatesDto
+        ~ {static} toDto(address : Address, usages : Long) : AddressDto
+    }
+}
+
+package ru.itmo.is.lab1.service.exception {
+    class NotFoundException {
+        + NotFoundException(message : String)
+        + {static} organization(id : long) : NotFoundException
+    }
+    class InvalidInputException {
+        - fieldErrors : Map<String, String>
+        + InvalidInputException(fieldErrors : Map<String, String>)
+        + InvalidInputException(field : String, message : String)
+        + getFieldErrors() : Map<String, String>
+    }
+}
+
+package java.lang {
+    class RuntimeException
+}
+
+OrganizationService +-- Relations
+OrganizationService ..> OrganizationFilter
+OrganizationService --> "1" CascadeDeleter
+RelatedObjectService --> "1" CascadeDeleter
+SpecialOperationsService --> "1" CascadeDeleter
+OrganizationService ..> DtoMapper
+RelatedObjectService ..> DtoMapper
+SpecialOperationsService ..> DtoMapper
+
+OrganizationService ..> NotFoundException : <<throw>>
+OrganizationService ..> InvalidInputException : <<throw>>
+RelatedObjectService ..> NotFoundException : <<throw>>
+SpecialOperationsService ..> InvalidInputException : <<throw>>
+NotFoundException --|> RuntimeException
+InvalidInputException --|> RuntimeException
+
+' Только раскладка: исключения размещаются под вспомогательными классами
+CascadeDeleter -[hidden]-> NotFoundException
+DtoMapper -[hidden]-> NotFoundException
+OrganizationFilter -[hidden]-> InvalidInputException
+Relations -[hidden]-> InvalidInputException
+@enduml

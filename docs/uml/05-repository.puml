@@ -1,0 +1,73 @@
+@startuml 05-repository
+!include style.iuml
+left to right direction
+
+package org.springframework.data.jpa.repository {
+    interface "JpaRepository<T, ID>" as JpaRepository
+    interface "JpaSpecificationExecutor<T>" as JpaSpecificationExecutor
+}
+
+package ru.itmo.is.lab1.repository {
+
+    interface OrganizationRepository <<Repository>> {
+        + findAll(spec : Specification<Organization>, pageable : Pageable) : Page<Organization>
+        + findWithRelationsById(id : long) : Optional<Organization>
+        + findAllByCoordinatesId(coordinatesId : long) : List<Organization>
+        + findAllByAddressId(addressId : long) : List<Organization>
+        + findRelationIds(id : long) : Optional<RelationIds>
+        + findEmployeesCount(id : long) : Optional<Long>
+        + countUsagesByCoordinates() : List<Object[]>
+        + countUsagesByAddress() : List<Object[]>
+    }
+
+    interface "OrganizationRepository.RelationIds" as RelationIds {
+        + getCoordinatesId() : Long
+        + getOfficialAddressId() : Long
+        + getPostalAddressId() : Long
+    }
+
+    interface CoordinatesRepository <<Repository>> {
+        + findAllByOrderById() : List<Coordinates>
+        + findUnusedIds(ids : Collection<Long>) : List<Long>
+    }
+
+    interface AddressRepository <<Repository>> {
+        + findAllByOrderById() : List<Address>
+        + findUnusedIds(ids : Collection<Long>) : List<Long>
+    }
+
+    class SpecialOperationsRepository <<Repository>> {
+        - entityManager : EntityManager
+        + countByType(type : OrganizationType) : long
+        + countFullNameGreaterThan(fullName : String) : long
+        + findTypeLessThan(type : OrganizationType) : List<Organization>
+        + addEmployee(organizationId : long) : long
+        + absorb(absorberId : long, absorbedId : long) : long
+        - {static} singleLong(result : Object) : long
+    }
+
+    class OrganizationSpecifications <<utility>> {
+        + {static} matching(name, fullName, type, officialZipCode, postalZipCode) : Specification<Organization>
+    }
+}
+
+package "db.migration: функции PostgreSQL" as dbfunctions {
+    class "count_organizations_by_type(p_type)" as f1 <<function>>
+    class "count_organizations_full_name_greater(p_full_name)" as f2 <<function>>
+    class "find_organizations_type_less_than(p_type)" as f3 <<function>>
+    class "add_organization_employee(p_organization_id)" as f4 <<function>>
+    class "absorb_organization(p_absorber_id, p_absorbed_id)" as f5 <<function>>
+}
+
+JpaRepository <|-- OrganizationRepository : <<bind>> T -> Organization, ID -> Long
+JpaSpecificationExecutor <|-- OrganizationRepository : <<bind>> T -> Organization
+JpaRepository <|-- CoordinatesRepository : <<bind>> T -> Coordinates, ID -> Long
+JpaRepository <|-- AddressRepository : <<bind>> T -> Address, ID -> Long
+OrganizationRepository +-- RelationIds
+
+SpecialOperationsRepository ..> f1 : <<call>>
+SpecialOperationsRepository ..> f2 : <<call>>
+SpecialOperationsRepository ..> f3 : <<call>>
+SpecialOperationsRepository ..> f4 : <<call>>
+SpecialOperationsRepository ..> f5 : <<call>>
+@enduml

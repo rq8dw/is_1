@@ -1,0 +1,65 @@
+@startuml 07-realtime
+!include style.iuml
+
+package ru.itmo.is.lab1.realtime {
+
+    class ChangePublisher <<Component>> {
+        - eventPublisher : ApplicationEventPublisher
+        + publish(entity : Entity, change : Change, ids : Collection<Long>) : void
+        + publish(entity : Entity, change : Change, id : long) : void
+    }
+
+    class ChangeBroadcaster <<Component>> {
+        - webSocketHandler : UpdatesWebSocketHandler
+        - objectMapper : ObjectMapper
+        + onChange(event : EntityChangedEvent) : void
+    }
+
+    class WebSocketConfig <<Configuration>> {
+        - updatesHandler : UpdatesWebSocketHandler
+        + registerWebSocketHandlers(registry : WebSocketHandlerRegistry) : void
+    }
+
+    class EntityChangedEvent <<record>> {
+        + entity : Entity
+        + change : Change
+        + ids : List<Long>
+    }
+
+    enum "EntityChangedEvent.Entity" as Entity <<enumeration>> {
+        ORGANIZATION
+        COORDINATES
+        ADDRESS
+    }
+
+    enum "EntityChangedEvent.Change" as Change <<enumeration>> {
+        CREATED
+        UPDATED
+        DELETED
+    }
+
+    class UpdatesWebSocketHandler <<Component>> {
+        - {static} SEND_TIME_LIMIT_MS : int = 5000
+        - {static} BUFFER_SIZE_LIMIT : int = 524288
+        - sessions : Map<String, WebSocketSession>
+        + afterConnectionEstablished(session : WebSocketSession) : void
+        + afterConnectionClosed(session : WebSocketSession, status : CloseStatus) : void
+        + handleTransportError(session : WebSocketSession, exception : Throwable) : void
+        + broadcast(payload : String) : void
+    }
+}
+
+package org.springframework.web.socket {
+    class TextWebSocketHandler
+    interface WebSocketConfigurer
+}
+
+ChangePublisher ..> EntityChangedEvent : <<create>>
+ChangeBroadcaster ..> EntityChangedEvent : <<listen>>
+EntityChangedEvent +-- Entity
+EntityChangedEvent +-- Change
+ChangeBroadcaster --> "1" UpdatesWebSocketHandler
+WebSocketConfig --> "1" UpdatesWebSocketHandler : /ws/updates
+UpdatesWebSocketHandler --|> TextWebSocketHandler
+WebSocketConfig ..|> WebSocketConfigurer
+@enduml
